@@ -11,6 +11,7 @@
 package com.ibm.ws.kernel.filemonitor.internal;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -32,6 +33,7 @@ import org.osgi.service.component.annotations.ReferencePolicy;
 import com.ibm.websphere.ras.Tr;
 import com.ibm.websphere.ras.TraceComponent;
 import com.ibm.websphere.ras.annotation.Trivial;
+import com.ibm.ws.kernel.filechange.monitor.FileChangeMonitor;
 import com.ibm.ws.kernel.filemonitor.FileNotification;
 import com.ibm.wsspi.kernel.filemonitor.FileMonitor;
 import com.ibm.wsspi.kernel.service.location.WsLocationAdmin;
@@ -65,6 +67,11 @@ public abstract class CoreServiceImpl implements CoreService, FileNotification {
     /** If true: issue (VERY) detailed/frequent trace about start/stop of every scan */
     private volatile boolean detailedScanTrace = false;
 
+    /** Used by prototype, CL will use it to read monitored file path */
+    private final ArrayList<String> filePaths = new ArrayList<String>();
+
+    private FileChangeMonitor fdc;
+
     /**
      * DS-driven component activation
      */
@@ -79,7 +86,15 @@ public abstract class CoreServiceImpl implements CoreService, FileNotification {
         // Make sure all file monitors have been initialized.
         for (Map.Entry<ServiceReference<FileMonitor>, MonitorHolder> entry : fileMonitors.entrySet()) {
             entry.getValue().init();
+            filePaths.addAll(entry.getValue().monitorFilePaths);
         }
+
+        for (String path : filePaths) {
+            Tr.event(tc, "Preparing register: ", path);
+        }
+//        prototype impl calls
+        Tr.event(tc, "Allen, new listen file change monitor registering file... rc=", fdc.registerFile(filePaths));
+        Tr.event(tc, "Allen, new listen file change monitor listening any file changes... detect: ", fdc.listenFileChange());
     }
 
     /**
@@ -109,6 +124,17 @@ public abstract class CoreServiceImpl implements CoreService, FileNotification {
                 // FFDC will be cut, and parseBoolean will log the warning
                 detailedScanTrace = false;
             }
+        }
+    }
+
+    @Reference(policy = ReferencePolicy.DYNAMIC)
+    protected void setFileChangeMonitor(FileChangeMonitor fdc) {
+        this.fdc = fdc;
+    }
+
+    protected void unsetFileChangeMonitor(FileChangeMonitor fdc) {
+        if (this.fdc == fdc) {
+            this.fdc = null;
         }
     }
 

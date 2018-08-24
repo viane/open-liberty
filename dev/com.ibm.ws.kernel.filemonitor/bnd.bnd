@@ -26,7 +26,8 @@ Bundle-Description: WebSphere kernel file monitor service, version ${bVersion} (
 Export-Package: \
  com.ibm.websphere.filemonitor;provide:=true, \
  com.ibm.wsspi.kernel.filemonitor, \
- com.ibm.ws.kernel.filemonitor;provide:=true
+ com.ibm.ws.kernel.filemonitor;provide:=true, \
+ com.ibm.ws.kernel.filechange.monitor
 
 Import-Package: \
  !*.internal.*, * 

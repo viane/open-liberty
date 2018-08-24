@@ -255,6 +255,8 @@ public abstract class MonitorHolder implements Runnable {
      * Just to be safe (and to make the core service code simpler), this method should
      * tolerate being called twice.
      */
+    public ArrayList<String> monitorFilePaths = new ArrayList();
+
     public void init() {
         // Only do initialization if we're in INIT state coming into this method
         if (monitorState.compareAndSet(MonitorState.INIT.ordinal(), MonitorState.INITIALIZING.ordinal())) {
@@ -288,6 +290,9 @@ public abstract class MonitorHolder implements Runnable {
                 for (String location : collection) {
                     try {
                         File file = new File(coreService.getLocationService().resolveString(location));
+
+                        // export to prototype use
+                        monitorFilePaths.add(file.getAbsolutePath());
 
                         UpdateMonitor um = createUpdateMonitor(file, MonitorType.FILE, monitorFilter);
 
